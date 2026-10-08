@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Watch Time Tracker for YouTube</title>
+<meta name="description" content="A free browser extension that shows how long you have watched YouTube videos and Shorts, and which channels you watch most.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='24' fill='%23ff0033'/%3E%3Ccircle cx='50' cy='50' r='24' fill='none' stroke='%23fff' stroke-width='7'/%3E%3Cpath d='M50 50V36M50 50l11 6' fill='none' stroke='%23fff' stroke-width='7' stroke-linecap='round'/%3E%3C/svg%3E">
+<style>
+:root { --red: #ff0033; --ink: #0f0f0f; --muted: #606060; --page: #ffffff; --line: #e5e5e5; --panel: #f5f5f5; --link: #065fd4; }
+@media (prefers-color-scheme: dark) {
+  :root { --ink: #f1f1f1; --muted: #aaaaaa; --page: #0f0f0f; --line: #303030; --panel: #1c1c1c; --link: #3ea6ff; }
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--page); color: var(--ink); font-family: Roboto, "Helvetica Neue", Arial, sans-serif; font-size: 17px; line-height: 1.6; }
+a { color: var(--link); }
+.wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+.top { background: var(--red); color: #fff; }
+.nav { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 20px 0; }
+.brand { display: inline-flex; align-items: center; gap: 10px; color: #fff; font-size: 20px; font-weight: 700; text-decoration: none; }
+.brand svg { width: 28px; height: 28px; }
+.brand span { white-space: nowrap; }
+.nav a.plain { color: #fff; font-weight: 500; white-space: nowrap; }
+@media (max-width: 420px) { .brand { font-size: 17px; } .nav a.plain { font-size: 15px; } }
+.nav a:focus-visible, .cta:focus-visible { outline: 3px solid #fff; outline-offset: 3px; border-radius: 6px; }
+footer { margin-top: 72px; padding: 28px 0 40px; border-top: 1px solid var(--line); color: var(--muted); font-size: 15px; }
+footer p { margin: 0 0 6px; }
+
+.hero { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr); gap: 48px; align-items: center; padding: 40px 0 72px; }
+.hero h1 { margin: 0; font-size: clamp(38px, 5.2vw, 62px); line-height: 1.06; letter-spacing: -0.03em; }
+.hero p { margin: 20px 0 0; max-width: 34em; font-size: 20px; line-height: 1.5; color: rgba(255,255,255,0.94); }
+.cta { display: inline-block; margin-top: 28px; padding: 14px 24px; border-radius: 28px; background: #181818; color: #fff; font-weight: 700; text-decoration: none; }
+.cta:hover { background: #000; }
+.card { padding: 26px 28px 28px; border-radius: 24px; background: #181818; color: #f1f1f1; font-variant-numeric: tabular-nums; box-shadow: 0 24px 60px rgba(90, 0, 18, 0.45); }
+.card .label { color: #aaa; font-size: 15px; line-height: 22px; }
+.figure { display: flex; align-items: baseline; gap: 12px; margin-top: 4px; font-size: clamp(44px, 6vw, 64px); line-height: 1.05; font-weight: 700; letter-spacing: -0.02em; }
+.figure i { font-style: normal; font-weight: 400; color: #aaa; font-size: 0.42em; margin-left: 3px; letter-spacing: 0; }
+.split { display: flex; gap: 3px; height: 10px; margin-top: 16px; border-radius: 5px; overflow: hidden; }
+.split b { display: block; height: 100%; } .v { background: #f1f1f1; } .s { background: var(--red); }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 22px; margin-top: 12px; color: #aaa; font-size: 15px; }
+.legend span { display: inline-flex; align-items: center; gap: 7px; } .legend strong { color: #f1f1f1; }
+.sw { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+.rule { height: 1px; margin: 18px 0 14px; background: #3d3d3d; }
+.card h2 { margin: 0; font-size: 16px; line-height: 22px; }
+.row { display: grid; grid-template-columns: 26px 1fr auto; column-gap: 10px; row-gap: 5px; align-items: center; margin-top: 10px; font-size: 16px; line-height: 22px; }
+.rank { width: 24px; height: 24px; border-radius: 50%; color: #1c1708; font-size: 12px; font-weight: 700; text-align: center; line-height: 24px; }
+.name { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .time { color: #aaa; font-size: 14px; }
+.track { grid-column: 2 / -1; height: 3px; border-radius: 2px; background: #3d3d3d; } .track b { display: block; height: 100%; border-radius: 2px; }
+main h2 { margin: 64px 0 8px; font-size: 30px; line-height: 1.2; letter-spacing: -0.02em; }
+main > .wrap > p { margin: 0; max-width: 40em; color: var(--muted); }
+.features { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-top: 24px; padding: 0; list-style: none; }
+.features li { padding: 20px 22px; border-radius: 16px; background: var(--panel); }
+.features h3 { margin: 0 0 4px; font-size: 18px; }
+.features p { margin: 0; color: var(--muted); font-size: 16px; line-height: 1.5; }
+@media (max-width: 760px) { .hero { grid-template-columns: 1fr; gap: 32px; padding: 24px 0 48px; } main h2 { margin-top: 48px; font-size: 26px; } }
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <div class="nav"><a class="brand" href="./"><svg viewBox="-400 -400 800 800" aria-hidden="true"><circle r="300" fill="none" stroke="currentColor" stroke-width="84"/><path d="M0 0V-170M0 0L130 75" fill="none" stroke="currentColor" stroke-width="84" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Watch Time Tracker</span></a><a class="plain" href="privacy.html">Privacy policy</a></div>
+  <div class="hero">
+    <div>
+      <h1>See where your YouTube time goes</h1>
+      <p>Watch Time Tracker is a free browser extension that shows how long you have watched YouTube videos and Shorts, right beside the video.</p>
+      <a class="cta" href="https://chromewebstore.google.com/detail/hmmcmpigodnphdemhgmnmdkdbpncadbi">Get it on the Chrome Web Store</a>
+    </div>
+    <div class="card" aria-label="Example of the tracker">
+      <div class="label">Watched in the last 24 hours</div>
+      <div class="figure"><span>3<i>h</i></span><span>42<i>m</i></span><span>07<i>s</i></span></div>
+      <div class="split"><b class="v" style="flex:170"></b><b class="s" style="flex:52"></b></div>
+      <div class="legend"><span><b class="sw v"></b>Videos <strong>2h 50m</strong></span><span><b class="sw s"></b>Shorts <strong>52m</strong></span></div>
+      <div class="rule"></div>
+      <h2>Most watched channels</h2>
+      <div class="row"><span class="rank" style="background:#f5c84b">1</span><span class="name" style="color:#f5c84b">Northlight Workshop</span><span class="time">55h 33m</span><span class="track"><b style="width:100%;background:#f5c84b"></b></span></div><div class="row"><span class="rank" style="background:#cdd3db">2</span><span class="name" style="color:#cdd3db">Kettle &amp; Compass</span><span class="time">31h 24m</span><span class="track"><b style="width:57%;background:#cdd3db"></b></span></div><div class="row"><span class="rank" style="background:#dc8f55">3</span><span class="name" style="color:#dc8f55">Hollow Peak Gaming</span><span class="time">21h 53m</span><span class="track"><b style="width:39%;background:#dc8f55"></b></span></div>
+    </div>
+  </div>
+</div></header>
+
+<main><div class="wrap">
+  <h2>What it does</h2>
+  <p>The tracker sits above the recommended videos on a watch page, and beside the player on Shorts. It starts counting when you install it.</p>
+  <ul class="features">
+    <li><h3>Live watch time</h3><p>Your last 24 hours, counting second by second, split between videos and Shorts.</p></li>
+    <li><h3>Week, month and year</h3><p>Running totals for the past week, month and year.</p></li>
+    <li><h3>Most watched channels</h3><p>Your top channels by total watch time, with gold, silver and bronze for the first three.</p></li>
+    <li><h3>A graph of every day</h3><p>Watch time by day, month or year, with videos and Shorts stacked.</p></li>
+    <li><h3>Works on Shorts</h3><p>It follows the Shorts player and can shrink to a small pill.</p></li>
+  </ul>
+
+  <h2>Your data stays yours</h2>
+  <p>Your watch time is stored on your own device and is never sent to the developer.</p>
+  <ul class="features">
+    <li><h3>Optional backup</h3><p>Sign in with Google to keep a copy in your own Google Drive, so it survives reinstalling and is shared between your devices.</p></li>
+    <li><h3>Backup files</h3><p>Export your data to a file, or import one, at any time. No account needed.</p></li>
+    <li><h3>Delete everything</h3><p>One button erases your watch time, including the copy in your Google Drive if sync is on.</p></li>
+  </ul>
+  <p style="margin-top:20px">Full details are in the <a href="privacy.html">privacy policy</a>.</p>
+</div></main>
+<footer><div class="wrap">
+  <p><a href="./">Home</a> &nbsp;|&nbsp; <a href="privacy.html">Privacy policy</a></p>
+  <p>Made by spendoge. Contact: <a href="mailto:spend0ge@pm.me">spend0ge@pm.me</a></p>
+  <p>Watch Time Tracker is an independent project. It is not affiliated with or endorsed by YouTube or Google.</p>
+</div></footer>
+</body>
+</html>
